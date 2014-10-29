@@ -262,6 +262,9 @@ def parse_args():
                              help='show issue comment(s) (default: %(default)s)')
     group_issue.add_argument('--issue-oneline', action='store_true',
                              help='show single line per issue (default: %(default)s)')
+    # show open sprint for project
+    group_issue.add_argument('--sprint', nargs=1, metavar='project',
+                             help='show open sprint  for project.')
     # comments
     group_issue.add_argument('--issue-comment-add', nargs=1, metavar='issue-key',
                              help='add a comment to given issue.')
@@ -483,6 +486,11 @@ if __name__ == "__main__":
     #print issue search results
     if args['issue_search']:
         issue_search_result_print(args['issue_search'])
+        sys.exit(0)
+
+    if args['sprint']:
+        search_string = 'project = "%s" AND sprint IN openSprints()' % args['sprint'][0]
+        issue_search_result_print([search_string])
         sys.exit(0)
 
     #print issue(s) and exit
