@@ -204,7 +204,7 @@ def sprint(project):
 
     content = [[issue.key,
                 issue.fields.status.name,
-                issue.fields.assignee.name,
+                issue.fields.assignee.name if issue.fields.assignee else "Nobody",
                 issue.fields.summary[:80]] for issue in issues]
     import tabulate
     print(tabulate.tabulate(content,
