@@ -25,6 +25,7 @@ import ConfigParser
 import logging
 import getpass
 import datetime
+import tabulate
 from collections import OrderedDict
 from termcolor import colored as colorfunc
 from jira.client import JIRA
@@ -89,6 +90,36 @@ def config_get():
     else:
         log.debug("{0} section already available in '{1}'".format(section_name, user_config_path))
     return dict(conf.items(section_name))
+
+
+#http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
+def get_term_size():
+    env = os.environ
+    def ioctl_GWINSZ(fd):
+        try:
+            import fcntl, termios, struct
+            cr = struct.unpack('hh',
+                               fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+        except:
+            return
+        return cr
+    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            cr = ioctl_GWINSZ(fd)
+            os.close(fd)
+        except:
+            pass
+    if not cr:
+        cr = (env.get('LINES', 25), env.get('COLUMNS', 80))
+
+        ### Use get(key[, default]) instead of a try/catch
+        #try:
+        #    cr = (env['LINES'], env['COLUMNS'])
+        #except:
+        #    cr = (25, 80)
+    return int(cr[1]), int(cr[0])
 
 
 def jira_obj_get(conf):
@@ -207,12 +238,23 @@ def issue_search_result_print(searchstring_list):
 
 def sprint(project):
     issues = jira.search_issues('project = "%s" AND sprint IN openSprints()' % project)
+    width, height = get_term_size()
 
-    content = [[issue.key,
+    content = []
+    sizes = [0, 0, 0]
+    for issue in issues:
+        content.append([issue.key,
                 issue.fields.status.name,
-                issue.fields.assignee.name if issue.fields.assignee else "Nobody",
-                issue.fields.summary[:80]] for issue in issues]
-    import tabulate
+                issue.fields.assignee.name if issue.fields.assignee
+                                           else "Nobody",
+                issue.fields.summary])
+        for i in range(3):
+            if sizes[i] < len(content[-1][i]):
+                sizes[i] = len(content[-1][i])
+    summary_width = width - sum(sizes) - 7
+    for line in content:
+        line[-1] = line[-1][:summary_width]
+
     print(tabulate.tabulate(content,
                             headers=['issue', 'status', 'assignee', 'summary']))
 
