@@ -6,25 +6,25 @@ with open(os.path.join(os.path.dirname(__file__), "README.rst"), "r") as f:
     long_desc = "".join(f.readlines())
 
 setup(
-    name = "jiracli",
-    version = "0.4.1",
-    packages = find_packages(),
-    scripts = ['jiracli'],
-    package_data = {
+    name="jiracli",
+    version="0.4.1",
+    packages=find_packages(),
+    scripts=['jiracli'],
+    package_data={
         '': ['README.rst', 'LICENSE'],
     },
-    install_requires = [
+    install_requires=[
         'jira-python>=0.13',
         'termcolor',
         'setuptools',
     ],
-    author = "Thomas Bechtold",
-    author_email = "thomasbechtold@jpberlin.de",
-    description = "command line interface for jira",
+    author="Thomas Bechtold",
+    author_email="thomasbechtold@jpberlin.de",
+    description="command line interface for jira",
     long_description=long_desc,
-    license = "GPL-3",
-    keywords = "jira cli atlassian REST",
-    url = "https://github.com/toabctl/jiracli",
+    license="GPL-3",
+    keywords="jira cli atlassian REST",
+    url="https://github.com/toabctl/jiracli",
 
     classifiers=[
         "Development Status :: 4 - Beta",
