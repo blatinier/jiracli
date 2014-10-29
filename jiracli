@@ -262,31 +262,34 @@ def parse_args():
                              help='show issue comment(s) (default: %(default)s)')
     group_issue.add_argument('--issue-oneline', action='store_true',
                              help='show single line per issue (default: %(default)s)')
-    #comments
+    # comments
     group_issue.add_argument('--issue-comment-add', nargs=1, metavar='issue-key',
                              help='add a comment to given issue.')
 
-    #labels
+    # labels
     group_issue.add_argument("--issue-label-add", nargs=2, metavar=('issue', 'label'),
                              help='Add a label to the given issue')
     group_issue.add_argument("--issue-label-remove", nargs=2, metavar=('issue', 'label'),
                              help='Remove a label from the given issue')
 
-    #components
+    # components
     group_issue.add_argument("--issue-component-add", nargs=2, metavar=('issue', 'component'),
                              help='Add a component to the given issue')
     group_issue.add_argument("--issue-component-remove", nargs=2, metavar=('issue', 'component'),
                              help='Remove a component from the given issue')
 
-    #transitions
+    # transitions
     group_issue.add_argument('--issue-trans', nargs=1, metavar='transition',
-                             help='Execute transition for issue')
-    #watchers
+                             help='Execute transition for issues')
+    # assign
+    group_issue.add_argument('--assign', nargs=1, metavar='assignee',
+                             help='Assign issues')
+    # watchers
     group_issue.add_argument("--issue-watch-add", nargs='+', metavar='issue',
                              help='Add watch to the given issue(s)')
     group_issue.add_argument("--issue-watch-remove", nargs='+', metavar='issue',
                              help='Remove watch from the given issue(s)')
-    #fix versions
+    # fix versions
     group_issue.add_argument("--issue-fix-version-add", nargs='+', metavar='issue',
                              help='Add fix version to the given issue(s)')
     group_issue.add_argument("--issue-fix-version-remove", nargs='+', metavar='issue',
@@ -504,4 +507,7 @@ if __name__ == "__main__":
                             args['issue_trans'], i)
         issues = [jira.issue(i) for i in args['issue']]
         issue_list_print(issues, args['issue_desc'], args['issue_comments'], args['issue_oneline'])
+        if args['assign']:
+            for i in issues:
+                jira.assign_issue(issue=i, assignee=args['assign'][0])
         sys.exit(0)
