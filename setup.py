@@ -17,6 +17,7 @@ setup(
         'jira-python>=0.13',
         'termcolor',
         'setuptools',
+        'tabulate',
     ],
     author="Thomas Bechtold",
     author_email="thomasbechtold@jpberlin.de",

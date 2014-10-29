@@ -199,6 +199,18 @@ def issue_search_result_print(searchstring_list):
         issue_list_print(issues, args['issue_desc'], args['issue_comments'], args['issue_oneline'])
 
 
+def sprint(project):
+    issues = jira.search_issues('project = "%s" AND sprint IN openSprints()' % project)
+
+    content = [[issue.key,
+                issue.fields.status.name,
+                issue.fields.assignee.name,
+                issue.fields.summary[:80]] for issue in issues]
+    import tabulate
+    print(tabulate.tabulate(content,
+                            headers=['issue', 'status', 'assignee', 'summary']))
+
+
 def filter_list_print(filter_list):
     """print a list of filters"""
     for f in filter_list:
@@ -489,8 +501,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args['sprint']:
-        search_string = 'project = "%s" AND sprint IN openSprints()' % args['sprint'][0]
-        issue_search_result_print([search_string])
+        sprint(args['sprint'][0])
         sys.exit(0)
 
     #print issue(s) and exit
