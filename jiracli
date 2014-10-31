@@ -24,9 +24,9 @@ import argparse
 import ConfigParser
 import logging
 import getpass
+import datetime
 import tabulate
 from collections import OrderedDict
-from datetime import datetime
 from termcolor import colored as colorfunc
 from jira.client import JIRA
 import tempfile
@@ -140,8 +140,9 @@ def dtstr2dt(dtstr):
     """nicer datetime string
     jira delivers something like '2013-11-07T16:13:24.000+0100'"""
     # TODO: maybe %c is not the best formatter.
-    # Output depends on current locale.
-    return datetime.strptime(dtstr[:-9], "%Y-%m-%dT%H:%M:%S").strftime("%c")
+    # Output depends on current locale
+    return datetime.datetime.strptime(dtstr[:-9],
+                                      "%Y-%m-%dT%H:%M:%S").strftime("%c")
 
 
 def issue_status_color(status):
