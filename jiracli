@@ -37,10 +37,10 @@ if sys.stdout.encoding is None:
     writer = codecs.getwriter("utf-8")
     sys.stdout = writer(sys.stdout)
 
-#log object
+# log object
 log = None
-#path to the user configuration file
-user_config_path=os.path.expanduser('~/.jiracli.ini')
+# path to the user configuration file
+user_config_path = os.path.expanduser('~/.jiracli.ini')
 
 
 def setup_logging(debug):
@@ -54,20 +54,22 @@ def setup_logging(debug):
     sh.setFormatter(formatter)
     log.addHandler(sh)
 
+
 def editor_get_text(text_template):
     """get text from an editor via a tempfile"""
     tf = tempfile.NamedTemporaryFile()
     tf.write("-- lines starting with '--' will be ignored\n")
     tf.write(text_template)
     tf.flush()
-    editor = os.environ.setdefault("EDITOR","vim")
+    editor = os.environ.setdefault("EDITOR", "vim")
     os.system("%s %s" % (editor, tf.name))
     tf.seek(0)
-    return "\n".join([line for line in tf.read().split('\n') if not line.startswith("--")])
+    return "\n".join([line for line in tf.read().split('\n')
+                      if not line.startswith("--")])
 
 
 def config_credentials_get():
-    #get username, password and url
+    # get username, password and url
     user = raw_input("username:")
     password = getpass.getpass()
     url = raw_input("url:")
@@ -92,12 +94,15 @@ def config_get():
     return dict(conf.items(section_name))
 
 
-#http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
+# http://stackoverflow.com/questions/566746/how-to-get-console-window-width-in-python
 def get_term_size():
     env = os.environ
+
     def ioctl_GWINSZ(fd):
         try:
-            import fcntl, termios, struct
+            import fcntl
+            import struct
+            import termios
             cr = struct.unpack('hh',
                                fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except:
@@ -114,11 +119,11 @@ def get_term_size():
     if not cr:
         cr = (env.get('LINES', 25), env.get('COLUMNS', 80))
 
-        ### Use get(key[, default]) instead of a try/catch
-        #try:
-        #    cr = (env['LINES'], env['COLUMNS'])
-        #except:
-        #    cr = (25, 80)
+        # ## Use get(key[, default]) instead of a try/catch
+        # try:
+        #     cr = (env['LINES'], env['COLUMNS'])
+        # except:
+        #     cr = (25, 80)
     return int(cr[1]), int(cr[0])
 
 
@@ -132,7 +137,7 @@ def jira_obj_get(conf):
 def dtstr2dt(dtstr):
     """nicer datetime string
     jira delivers something like '2013-11-07T16:13:24.000+0100'"""
-    #TODO: maybe %c is not the best formatter. Output depends on current locale.
+    # TODO: maybe %c is not the best formatter. Output depends on current locale.
     return datetime.datetime.strptime(dtstr[:-9], "%Y-%m-%dT%H:%M:%S").strftime("%c")
 
 
@@ -180,8 +185,8 @@ def issue_format(issue, show_desc=False, show_comments=False):
         fields['attachment'] = ", ".join(map(lambda x: x.filename, issue.fields.attachment))
     if hasattr(issue.fields, 'issuelinks') and len(issue.fields.issuelinks) > 0:
         link_list = list()
-        #inward issue: the issue to link from
-        #outward issue: the issue to link to
+        # inward issue: the issue to link from
+        # outward issue: the issue to link to
         for link in issue.fields.issuelinks:
             if 'outwardIssue' in link.raw:
                 link_list.append(link.raw['outwardIssue'])
@@ -194,15 +199,15 @@ def issue_format(issue, show_desc=False, show_comments=False):
         else:
             fields['comments'] = "0"
     else:
-        #show only the number of comments
+        # show only the number of comments
         if hasattr(issue.fields, 'comment') and len(issue.fields.comment.comments) > 0:
             fields['comments'] = "%s" % (len(issue.fields.comment.comments))
     transitions = jira.transitions(issue)
     fields['trans'] = ", ".join(map(lambda x: x['name'] + "(" + x['id'] + ")", transitions))
 
-    #print(dir(issue.fields))
-    #add empty strings if field not available
-    for k,v in fields.items():
+    # print(dir(issue.fields))
+    # add empty strings if field not available
+    for k, v in fields.items():
         if not v:
             fields[k] = ""
     return fields
@@ -210,28 +215,30 @@ def issue_format(issue, show_desc=False, show_comments=False):
 
 def issue_list_print(issue_list, show_desc, show_comments, oneline):
     """print a list of issues"""
-    #disable color if oneline is used
+    # disable color if oneline is used
     if oneline:
         global colorfunc
-        colorfunc = lambda *a,**k:a[0]
+        colorfunc = lambda *a, **k: a[0]
 
     for issue in issue_list:
-        #issue header
+        # issue header
         print(issue_header(issue))
         if oneline:
             continue
-        #issue description
+        # issue description
         desc_fields = issue_format(issue,
                                    show_desc=show_desc,
                                    show_comments=show_comments)
-        print("\n".join( " : ".join((k.ljust(20),v)) for k,v in desc_fields.items() ) + "\n")
+        print("\n".join(" : ".join((k.ljust(20), v))
+              for k, v in desc_fields.items()) + "\n")
+
 
 def issue_search_result_print(searchstring_list):
     """print issues for the given search string(s)"""
     for searchstr in searchstring_list:
         issues = jira.search_issues(searchstr)
-        #FIXME: debug problem why comments are not available if I use jira.search_issues()
-        #get issues again.
+        # FIXME: debug problem why comments are not available if
+        # I use jira.search_issues() get issues again.
         issues = [jira.issue(i.key) for i in issues]
         issue_list_print(issues, args['issue_desc'], args['issue_comments'], args['issue_oneline'])
 
@@ -244,10 +251,10 @@ def sprint(project):
     sizes = [0, 0, 0]
     for issue in issues:
         content.append([issue.key,
-                issue.fields.status.name,
-                issue.fields.assignee.name if issue.fields.assignee
-                                           else "Nobody",
-                issue.fields.summary])
+                        issue.fields.status.name,
+                        issue.fields.assignee.name if issue.fields.assignee
+                        else "Nobody",
+                        issue.fields.summary])
         for i in range(3):
             if sizes[i] < len(content[-1][i]):
                 sizes[i] = len(content[-1][i])
@@ -262,22 +269,21 @@ def sprint(project):
 def filter_list_print(filter_list):
     """print a list of filters"""
     for f in filter_list:
-        #header
-        print("%s" % (colorfunc("%s, %s" % (f.id,
-                                         f.name),
-                                  None, attrs=['bold', 'underline'])))
-        #fields to show for the filter
+        # header
+        print("%s" % (colorfunc("%s, %s" % (f.id, f.name),
+                                None, attrs=['bold', 'underline'])))
+        # fields to show for the filter
         fields = OrderedDict()
         fields['Url'] = f.viewUrl
         fields['description'] = getattr(f, 'description', '')
         fields['owner'] = f.owner.name
         fields['jql'] = f.jql
-        #add empty strings if field not available
-        for k,v in fields.items():
+        # add empty strings if field not available
+        for k, v in fields.items():
             if not v:
                 fields[k] = ""
-
-        print("\n".join( " : ".join((k.ljust(20),v)) for k,v in fields.items() ) + "\n")
+        print("\n".join(" : ".join((k.ljust(20), v))
+              for k, v in fields.items()) + "\n")
 
 
 def parse_args():
@@ -300,17 +306,16 @@ def parse_args():
     parser.add_argument("--no-color", action='store_true',
                         help='disable colorful output (default: %(default)s)')
     group_issue = parser.add_argument_group('issue')
-    #create
+    # create
     group_issue.add_argument('-c', '--issue-create', nargs=5, metavar=('project-key', 'issue-type', 'summary', 'labels', 'components'),
                              help='create a new issue. "labels" can be a single label or a comma seperated list of labels. "components" can be a comma seperated list of components.')
 
     group_issue.add_argument('--issues-create', nargs=4, metavar=('project-key', 'parent-issue-type', 'child-issue-type', 'file'),
                              help='Read Issue Summaries from a file. Each line is a summary.')
 
-
-    #show and search
+    # show and search
     group_issue.add_argument('-i', '--issue', nargs='+', metavar='issue',
-                        help='issue(s) to show')
+                             help='issue(s) to show')
 
     group_issue.add_argument('--issue-search', nargs='+', metavar='searchstring',
                              help='search for issues. searchstring is ie: assignee=CurrentUser() and status!="Closed"')
@@ -371,12 +376,13 @@ if __name__ == "__main__":
 
     # use colorful output?
     if args['no_color']:
-        colorfunc = lambda *a,**k:str(a[0])
+        colorfunc = lambda *a, **k: str(a[0])
 
     # print issue link types
     if args['issue_link_types_list']:
         for i in jira.issue_link_types():
-              print("%s%s%s" % (i.name.ljust(30), i.inward.ljust(25), i.outward.ljust(25)))
+            print("%s%s%s" % (i.name.ljust(30), i.inward.ljust(25),
+                              i.outward.ljust(25)))
         sys.exit(0)
 
     # print project list and exit
@@ -407,14 +413,14 @@ if __name__ == "__main__":
     if args['issue_label_add']:
         issue = jira.issue(args['issue_label_add'][0])
         issue.fields.labels.append(args['issue_label_add'][1])
-        issue.update(fields={"labels" : issue.fields.labels})
+        issue.update(fields={"labels": issue.fields.labels})
         sys.exit(0)
 
     # remove label from an issue
     if args['issue_label_remove']:
         issue = jira.issue(args['issue_label_remove'][0])
         labels_new = filter(lambda x: x.lower() != args['issue_label_remove'][1].lower(), issue.fields.labels)
-        issue.update(fields={"labels" : labels_new})
+        issue.update(fields={"labels": labels_new})
         sys.exit(0)
 
     # add component to an issue
@@ -423,14 +429,14 @@ if __name__ == "__main__":
         comp = {'name': args['issue_component_add'][1]}
         components_available = [{'name': c.name} for c in issue.fields.components]
         components_available.append(comp)
-        issue.update(fields={"components" : components_available})
+        issue.update(fields={"components": components_available})
         sys.exit(0)
 
     # remove component from an issue
     if args['issue_component_remove']:
         issue = jira.issue(args['issue_component_remove'][0])
         components_new = [{'name': x.name} for x in filter(lambda x: x.name.lower() != args['issue_component_remove'][1].lower(), issue.fields.components)]
-        issue.update(fields={"components" : components_new})
+        issue.update(fields={"components": components_new})
         sys.exit(0)
 
     # add a fixVersion to an issue
@@ -439,14 +445,14 @@ if __name__ == "__main__":
         fix_version_new = {'name': args['issue_fix_version_add'][1]}
         fix_versions_available = [{'name': c.name} for c in issue.fields.fixVersions]
         fix_versions_available.append(fix_version_new)
-        issue.update(fields={"fixVersions" : fix_versions_available})
+        issue.update(fields={"fixVersions": fix_versions_available})
         sys.exit(0)
 
     # remove fixVersion from an issue
     if args['issue_fix_version_remove']:
         issue = jira.issue(args['issue_fix_version_remove'][0])
         fix_versions_new = [{'name': x.name} for x in filter(lambda x: x.name.lower() != args['issue_fix_version_remove'][1].lower(), issue.fields.fixVersions)]
-        issue.update(fields={"fixVersions" : fix_versions_new})
+        issue.update(fields={"fixVersions": fix_versions_new})
         sys.exit(0)
 
     # add watch to issue(s)
@@ -495,15 +501,14 @@ if __name__ == "__main__":
             issue_dict['labels'] = args['issue_create'][3].split(',')
 
         if len(args['issue_create'][4]) > 0:
-            issue_dict['components'] = [ {'name': c} for c in args['issue_create'][4].split(',')]
+            issue_dict['components'] = [{'name': c} for c in args['issue_create'][4].split(',')]
 
         if args['issue_parent']:
-            issue_dict['parent'] = { 'id': args['issue_parent'] }
+            issue_dict['parent'] = {'id': args['issue_parent']}
 
         new_issue = jira.create_issue(fields=issue_dict)
         issue_list_print([new_issue], True, True, False)
         sys.exit(0)
-
 
     # create multiple new issues from file
     if args['issues_create']:
@@ -526,16 +531,16 @@ if __name__ == "__main__":
 
                 if n.lstrip().startswith("*") or n.lstrip().startswith("-"):
                     # this is a subtask
-                    issue_dict['parent'] = { 'id': parent_id }
+                    issue_dict['parent'] = {'id': parent_id}
                     issue_dict['issuetype'] = {'name': args['issues_create'][2]}
                     issue_dict['summary'] = n.lstrip()[1:]
                     is_subtask = True
                 else:
-                    #this is a task without a parent
+                    # this is a task without a parent
                     issue_dict['issuetype'] = {'name': args['issues_create'][1]}
                     issue_dict['summary'] = n
 
-                #create and print the new issue
+                # create and print the new issue
                 new_issue = jira.create_issue(fields=issue_dict)
                 issue_list_print([new_issue], True, True, False)
                 if not is_subtask:
@@ -543,7 +548,7 @@ if __name__ == "__main__":
 
         sys.exit(0)
 
-    #print issue search results
+    # print issue search results
     if args['issue_search']:
         issue_search_result_print(args['issue_search'])
         sys.exit(0)
@@ -552,7 +557,7 @@ if __name__ == "__main__":
         sprint(args['sprint'][0])
         sys.exit(0)
 
-    #print issue(s) and exit
+    # print issue(s) and exit
     if args['issue']:
         issues = [jira.issue(i) for i in args['issue']]
 
@@ -562,17 +567,20 @@ if __name__ == "__main__":
                 transitions = jira.transitions(issue)
                 transition = None
                 for t in transitions:
-                    if args['issue_trans'][0].lower() in (str(t['id']), t['name'].lower()):
+                    if args['issue_trans'][0].lower() in (str(t['id']),
+                                                          t['name'].lower()):
                         transition = t
                         break
                 if transition:
                     jira.transition_issue(issue, transition['id'])
-                    log.debug("moved to %s : issue '%s'", transition['name'], i)
+                    log.debug("moved to %s : issue '%s'",
+                              transition['name'], i)
                 else:
                     log.debug("Unknown transition %s for issue %s",
-                            args['issue_trans'], i)
+                              args['issue_trans'], i)
         issues = [jira.issue(i) for i in args['issue']]
-        issue_list_print(issues, args['issue_desc'], args['issue_comments'], args['issue_oneline'])
+        issue_list_print(issues, args['issue_desc'], args['issue_comments'],
+                         args['issue_oneline'])
         if args['assign']:
             for i in issues:
                 jira.assign_issue(issue=i, assignee=args['assign'][0])
