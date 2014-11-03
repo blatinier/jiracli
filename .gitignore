@@ -2,4 +2,6 @@ dist
 jiracli.egg-info/
 *.pyc
 build
+AUTHORS
+ChangeLog
 venv/
